@@ -1,0 +1,6 @@
+# Files
+python-prj.code-workspace
+*.pyc
+
+# Folders
+.vscode/
