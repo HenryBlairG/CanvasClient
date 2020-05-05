@@ -1,4 +1,4 @@
-#### [Buy me a Slice of Pizza](https://www.paypal.me/henryblairg)
+#### [Buy me a Slice of Pizza :pizza:](https://www.paypal.me/henryblairg)
 
 # CanvasClient
 Canvas education Platform unofficial client for desktop
