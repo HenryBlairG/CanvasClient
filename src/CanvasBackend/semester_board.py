@@ -11,16 +11,24 @@ import src.CanvasBackend.misc_utils as msc
 class Profile:
 
     URL_COURSES = 'https://cursos.canvas.uc.cl/api/v1/courses'
+    JSON_PATH = 'profile.json'
     TOKEN = None
 
     def __init__(self, token):
         Profile.TOKEN = token
-        self.courses = []
-        resp = get(Profile.URL_COURSES, headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
-        if not resp:
-            print('UPS')
-        for c in resp.json():
-            self.courses.append(Course(**c))
+        if os.path.isfile(Profile.JSON_PATH):
+            self.load_json()
+        else:
+            self.courses = []
+            resp = get(Profile.URL_COURSES, headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
+            if not resp:
+                print('UPS')
+            for c in resp.json():
+                self.courses.append(Course(**c))
+    
+    def load_json(self):
+        pass
+    
 
 
 class Course: 
@@ -198,7 +206,12 @@ class Files:
             self.parent = parent
             self.path = os.path.join(course.path, parent.full_name, self.display_name)
             course.files.add(self)
-            if self.url:
+            if os.path.isfile(self.path):
+                modified_at = msc.dt.fromtimestamp(round(os.path.getmtime(self.path)))
+                if modified_at >= self.updated_at:
+                    # print(f'{self.path}: Already Newest version, skipping download')
+                    pass
+            elif self.url:
                 rsp = get(self.url, headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
                 if not rsp:
                     raise bErr.GetContentError

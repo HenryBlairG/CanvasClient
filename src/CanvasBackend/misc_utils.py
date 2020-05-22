@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime as dt
 
 def str2datetime(x):
     if x is None:
         return None
-    return datetime.strptime(x, '%Y-%m-%dT%H:%M:%SZ')
+    return dt.strptime(x, '%Y-%m-%dT%H:%M:%SZ')
