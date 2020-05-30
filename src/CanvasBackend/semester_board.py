@@ -30,7 +30,6 @@ class Profile:
         pass
     
 
-
 class Course: 
 
     URL_FOLDERS = 'https://cursos.canvas.uc.cl/api/v1/courses/{}/folders'
@@ -142,11 +141,11 @@ class Folders:
             if self.files_count or self.folders_count:
                 os.makedirs(os.path.join(course.path, self.full_name), exist_ok=True)
                 if self.folders_count:
-                    rsp = get(self.folders_url + Folders.URL_SIZE.format(self.folders_count), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
+                    rsp = get(self.folders_url + Folders.URL_SIZE.format(self.folders_count+10), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
                     if rsp:
                         self.subfolders = {Folders(course, self, **f) for f in rsp.json() if int(f['folders_count']) or int(f['files_count'])}
                 if self.files_count:
-                    rsp = get(self.files_url + Folders.URL_SIZE.format(self.files_count), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
+                    rsp = get(self.files_url + Folders.URL_SIZE.format(self.files_count+10), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
                     if rsp:
                         self.files = {Files(self, course, **f) for f in rsp.json()}
     
