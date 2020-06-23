@@ -84,7 +84,7 @@ class Course:
         if Profile.TOKEN is None:
             raise bErr.NoTokenError
         
-        rsp = get(Course.URL_FOLDERS.format(self.id), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
+        rsp = get(Course.URL_FOLDERS.format(self.id) + Folders.URL_SIZE.format(50), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
         if not rsp:
             raise bErr.GetContentError
         
@@ -132,6 +132,7 @@ class Folders:
                 raise ValueError("unexpected kwarg value", k)
             else:
                 self.args.update((k,v))
+        # print(f'FOLDER: {self.full_name}\n')
         if self not in course.folders:
             # Local Atributes
             self.parent_folder = parent
@@ -141,11 +142,11 @@ class Folders:
             if self.files_count or self.folders_count:
                 os.makedirs(os.path.join(course.path, self.full_name), exist_ok=True)
                 if self.folders_count:
-                    rsp = get(self.folders_url + Folders.URL_SIZE.format(self.folders_count+10), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
+                    rsp = get(self.folders_url + Folders.URL_SIZE.format(self.folders_count+1), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
                     if rsp:
                         self.subfolders = {Folders(course, self, **f) for f in rsp.json() if int(f['folders_count']) or int(f['files_count'])}
                 if self.files_count:
-                    rsp = get(self.files_url + Folders.URL_SIZE.format(self.files_count+10), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
+                    rsp = get(self.files_url + Folders.URL_SIZE.format(self.files_count+1), headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
                     if rsp:
                         self.files = {Files(self, course, **f) for f in rsp.json()}
     
@@ -199,7 +200,9 @@ class Files:
             elif k in blacklist:
                 raise ValueError("unexpected kwarg value", k)
             else:
-                self.args.update((k,v))
+                # print(f'k:{k}\nv:{v}')
+                self.args.update({k: str(v)})
+        # print(f'FILE: {self.display_name}\n')
         if self not in course.files:
             # Local Atributes
             self.parent = parent
@@ -208,12 +211,16 @@ class Files:
             if os.path.isfile(self.path):
                 modified_at = msc.dt.fromtimestamp(round(os.path.getmtime(self.path)))
                 if modified_at >= self.updated_at:
-                    # print(f'{self.path}: Already Newest version, skipping download')
+                    # print(f'Skipping:   {self.path}')
                     pass
+            elif 'lock_info' in self.args:
+                print(f'Locked:     {self.path}')
+                pass
             elif self.url:
                 rsp = get(self.url, headers={'Authorization': f'Bearer {Profile.TOKEN}'}, timeout=60*45)
                 if not rsp:
                     raise bErr.GetContentError
+                print(f'Downloading: {self.path}')
                 open(self.path, 'wb').write(rsp.content)
 
     def __repr__(self):
