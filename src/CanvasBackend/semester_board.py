@@ -7,6 +7,10 @@ import os
 import src.CanvasBackend.board_exceptions as bErr
 import src.CanvasBackend.misc_utils as msc
 
+def null(x):
+    # Solo para llevar cuenta de lo que no conozco
+    return str(x)
+
 
 class Profile:
 
@@ -24,6 +28,7 @@ class Profile:
             if not resp:
                 print('UPS')
             for c in resp.json():
+                # print(f'{c}\n\n\n')
                 self.courses.append(Course(**c))
     
     def load_json(self):
@@ -35,50 +40,56 @@ class Course:
     URL_FOLDERS = 'https://cursos.canvas.uc.cl/api/v1/courses/{}/folders'
     # URL_FILES = 'https://cursos.canvas.uc.cl/api/v1/courses/{}/files'
     
-    def __init__(self, id, name, account_id, uuid, 
-                 start_at, grading_standard_id, is_public, created_at, 
-                 course_code, default_view, root_account_id, enrollment_term_id, 
-                 license, grade_passback_setting, end_at, public_syllabus, 
-                 public_syllabus_to_auth, storage_quota_mb, is_public_to_auth_users, 
-                 apply_assignment_group_weights, calendar, time_zone, original_name, 
-                 blueprint, enrollments, hide_final_grades, workflow_state, 
-                 course_format, restrict_enrollments_to_course_dates, **kw):
+    def __init__(self, **kw):
         # Request Atributes
-        self.id = int(id)
-        self.name = name
-        self.account_id = int(account_id)
-        self.uuid = uuid
-        self.start_at = start_at
-        self.grading_standard_id = grading_standard_id
-        self.is_public = is_public
-        self.created_at = created_at
-        self.course_code = course_code
-        self.default_view = default_view
-        self.root_account_id = int(root_account_id)
-        self.enrollment_term_id = int(enrollment_term_id)
-        self.license = license
-        self.grade_passback_setting = grade_passback_setting
-        self.end_at = end_at
-        self.public_syllabus = public_syllabus
-        self.public_syllabus_to_auth = public_syllabus_to_auth
-        self.storage_quota_mb = storage_quota_mb
-        self.is_public_to_auth_users = is_public_to_auth_users
-        self.apply_assignment_group_weights = apply_assignment_group_weights
-        self.calendar = calendar
-        self.time_zone = time_zone
-        self.original_name = original_name
-        self.blueprint = blueprint
-        self.enrollments = enrollments
-        self.hide_final_grades = hide_final_grades
-        self.workflow_state = workflow_state
-        self.course_format = course_format
-        self.restrict_enrollments_to_course_dates = restrict_enrollments_to_course_dates
-
+        whitelist = {
+            'id': int,
+            'name': null,
+            'account_id': int,
+            'uuid': str,
+            'start_at': msc.str2datetime, 
+            'grading_standard_id': null,
+            'is_public': bool,
+            'created_at': msc.str2datetime,
+            'course_code': str,
+            'default_view': null,
+            'root_account_id': int,
+            'enrollment_term_id': int,
+            'license': str,
+            'grade_passback_setting': null,
+            'end_at': msc.str2datetime,
+            'public_syllabus': null,
+            'public_syllabus_to_auth': null,
+            'storage_quota_mb': int,
+            'is_public_to_auth_users': bool,
+            'apply_assignment_group_weights': null,
+            'calendar': str,
+            'time_zone': str,
+            'original_name': str,
+            'blueprint': str,
+            'enrollments': str,
+            'hide_final_grades': str,
+            'workflow_state': null,
+            'course_format': null,
+            'restrict_enrollments_to_course_dates': str}
+        blacklist = {}
+        self.args = {}
+        for k, v in kw.items():
+            if k in whitelist.keys():
+                type_convert = whitelist[k]
+                setattr(self, k.replace('-', '_'), type_convert(v))
+            elif k in blacklist:
+                raise ValueError("unexpected kwarg value", k)
+            else:
+                self.args.update((k,v))
+        # Request Atributes
+        
         # Local Atributes
-        self.path = os.path.abspath(os.getcwd())
-        self.folders = set()
-        self.files = set()
-        self.__setUpFolders__()
+        if self.end_at > msc.dt.today():
+            self.path = os.path.abspath(os.getcwd())
+            self.folders = set()
+            self.files = set()
+            self.__setUpFolders__()
     
     def __setUpFolders__(self):            
         if Profile.TOKEN is None:
@@ -98,9 +109,6 @@ class Folders:
 
     def __init__(self, course, parent=None,**kw):
         # Request Atributes
-        def null(x):
-            # Solo para llevar cuenta de lo que no conozco
-            return str(x)
         whitelist = {'id': int,
                      'name': lambda x: str(x).replace(' ', '_').replace('course_files', course.name),
                      'full_name': lambda x: str(x).replace(' ', '_').replace('course_files', course.name),
@@ -165,9 +173,6 @@ class Folders:
 class Files:
 
     def __init__(self, parent, course, **kw):
-        def null(x):
-            # Solo para llevar cuenta de lo que no conozco
-            return str(x)
         # Request Atributes
         whitelist = {'id': int, 
                      'uuid': str, 
