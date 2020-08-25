@@ -81,11 +81,11 @@ class Course:
             elif k in blacklist:
                 raise ValueError("unexpected kwarg value", k)
             else:
-                self.args.update((k,v))
+                self.args.update({k: v})
         # Request Atributes
         
         # Local Atributes
-        if self.end_at > msc.dt.today():
+        if self.end_at >= msc.dt.today() or not self.end_at:
             self.path = os.path.abspath(os.getcwd())
             self.folders = set()
             self.files = set()
