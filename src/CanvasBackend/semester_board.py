@@ -85,7 +85,7 @@ class Course:
         # Request Atributes
         
         # Local Atributes
-        if self.end_at >= msc.dt.today() or not self.end_at:
+        if not self.end_at or self.end_at >= msc.dt.today():
             self.path = os.path.abspath(os.getcwd())
             self.folders = set()
             self.files = set()
